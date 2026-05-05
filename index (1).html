@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Acordos — Castro Lóssio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F2;--surface:#fff;--surface2:#F0EFE9;--border:#E2E0D8;--border2:#CBC9BF;--text:#1C1B18;--text2:#6B6960;--text3:#A8A69E;--accent:#1C1B18;--green:#2D6A4F;--green-bg:#D8F3DC;--green-light:#F0FAF2;--amber:#7B5E2A;--amber-bg:#FEF3C7;--amber-light:#FFFBEB;--red:#922B21;--red-bg:#FDECEA;--red-light:#FEF2F2;--blue:#1A4F8A;--blue-bg:#DBEAFE;--blue-light:#EFF6FF;--radius:10px;--radius-lg:14px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+.main{margin-left:220px;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+.content{padding:1.75rem 2rem}
+.sidebar-logo{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border)}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;letter-spacing:-.5px;margin-bottom:8px}
+.logo-name{font-size:13px;font-weight:600}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.nav{padding:.75rem;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text2);margin-bottom:2px;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:500}
+.nav-icon{font-size:15px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:#922B21;color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px}
+.nav-item.active .nav-badge{background:rgba(255,255,255,.25)}
+.sidebar-footer{padding:.75rem 1rem;border-top:1px solid var(--border)}
+.sync-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#2D6A4F;flex-shrink:0}
+.sync-dot.syncing{background:#7B5E2A;animation:blink 1s infinite}
+.sync-dot.error{background:#922B21}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.page-title{font-size:16px;font-weight:600}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:500;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:600;line-height:1}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-card.danger .stat-value{color:var(--red)}
+.stat-card.success .stat-value{color:var(--green);font-size:18px;margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden}
+.card-header{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600}
+.card-body{padding:1.25rem}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);background:var(--surface2)}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.badge.pago{background:var(--green-bg);color:var(--green)}
+.badge.pendente{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.badge.vencido{background:var(--red-bg);color:var(--red)}
+.badge.hoje{background:var(--blue-bg);color:var(--blue)}
+.badge.alerta{background:var(--amber-bg);color:var(--amber)}
+.badge.tipo{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-bg);font-size:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--surface2);border-color:var(--text3)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#333}
+.btn.success{background:var(--green-light);color:var(--green);border-color:#A7D9B4}
+.btn.success:hover{background:var(--green-bg)}
+.btn.gmail{background:var(--red-light);color:var(--red);border-color:#F5C6C3}
+.btn.gmail:hover{background:var(--red-bg)}
+.btn.sm{padding:4px 9px;font-size:11px}
+.notif-list{display:flex;flex-direction:column;gap:8px}
+.notif-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.notif-item.urgent{border-color:#F5C6C3;background:var(--red-light)}
+.notif-item.warn{border-color:#FDE68A;background:var(--amber-light)}
+.notif-item.info{border-color:#BFDBFE;background:var(--blue-light)}
+.notif-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:600}
+.notif-icon.e1{background:var(--blue-bg);color:var(--blue)}
+.notif-icon.e2{background:var(--amber-bg);color:var(--amber)}
+.notif-icon.e3{background:var(--red-bg);color:var(--red)}
+.notif-body{flex:1}
+.notif-title{font-size:13px;font-weight:500}
+.notif-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.email-chips{display:flex;gap:4px}
+.echip{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:1px solid var(--border);color:var(--text3);background:var(--surface2)}
+.echip.sent{background:var(--green-bg);color:var(--green);border-color:#A7D9B4}
+.progress-bar{height:5px;border-radius:3px;overflow:hidden;display:flex;gap:2px;margin-top:4px}
+.progress-bar div{flex:1;border-radius:2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.form-input{padding:8px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);transition:border .15s}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(28,27,24,.06)}
+textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:680px;max-width:calc(100vw - 2rem);max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md);transform:translateY(16px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:15px;font-weight:600}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--surface2)}
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{padding:11px 16px;border-radius:var(--radius);font-size:12.5px;font-weight:500;box-shadow:var(--shadow-md);transform:translateX(120%);transition:transform .25s;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(0)}
+.toast.ok{background:var(--green-bg);color:var(--green);border:1px solid #A7D9B4}
+.toast.err{background:var(--red-bg);color:var(--red);border:1px solid #F5C6C3}
+.toast.info{background:var(--blue-bg);color:var(--blue);border:1px solid #BFDBFE}
+.loading-full{position:fixed;inset:0;background:rgba(247,246,242,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:150}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text2)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty-state .icon{font-size:2.5rem;margin-bottom:.75rem}
+.empty-state p{font-size:13px}
+.mono{font-family:'DM Mono',monospace;font-size:11px}
+.alert-section{border:1px solid #F5C6C3;border-radius:var(--radius-lg);background:var(--red-light);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.alert-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.alert-title{font-size:13px;font-weight:600;color:var(--red)}
+.tab-row{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
+.tab-btn{padding:8px 14px;border:none;background:transparent;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text2);font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+.config-item{display:flex;align-items:center;justify-content:space-between;padding:.875rem 0;border-bottom:1px solid var(--border)}
+.config-item:last-child{border-bottom:none}
+.config-label{font-size:13px;font-weight:500}
+.config-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* LOGIN SCREEN */
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:420px;text-align:center;box-shadow:var(--shadow-md)}
+.login-logo{width:52px;height:52px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;margin:0 auto 1.25rem}
+.login-title{font-size:20px;font-weight:600;margin-bottom:.5rem}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem;line-height:1.6}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 20px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;color:var(--text);font-family:'DM Sans',sans-serif;width:100%;transition:all .15s}
+.google-btn:hover{background:var(--surface2)}
+.google-icon{width:20px;height:20px}
+.login-note{font-size:11px;color:var(--text3);margin-top:1rem;line-height:1.6}
+
+/* SETUP SCREEN */
+.setup-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:190}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:480px;box-shadow:var(--shadow-md)}
+.setup-title{font-size:16px;font-weight:600;margin-bottom:.5rem}
+.setup-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.step{display:flex;gap:12px;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.step-text{font-size:12px;color:var(--text2);line-height:1.6}
+.step-text strong{color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">CL</div>
+    <div class="login-title">Controle de Acordos</div>
+    <div class="login-sub">Castro Lóssio Advocacia Empresarial<br>Faça login com sua conta Google para acessar os dados do escritório.</div>
+    <button class="google-btn" onclick="iniciarLogin()">
+      <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
+    </button>
+    <div class="login-note">Necessário autorizar acesso ao Google Drive e Gmail para sincronização dos dados e criação de rascunhos de e-mail.</div>
+  </div>
+</div>
+
+<!-- SETUP SCREEN (first time) -->
+<div class="setup-screen" id="setup-screen" style="display:none">
+  <div class="setup-box">
+    <div class="setup-title">⚙ Configuração inicial</div>
+    <div class="setup-sub">Primeira vez abrindo a ferramenta. Informe o ID do arquivo de dados no Google Drive para conectar.</div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <div class="form-label">ID do arquivo de dados (Google Drive)</div>
+      <input id="setup-file-id" class="form-input" placeholder="Ex: 1ABC123xyz..." value="1KOq78d39Al829Yuxuhui12vLy5V52WGx" />
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Encontre o ID na URL do arquivo no Drive: drive.google.com/file/d/<strong>ID_AQUI</strong>/view</div>
+    </div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">O arquivo <strong>controle_acordos_castrolossio.json</strong> já foi criado no seu Drive anteriormente. O ID padrão já está preenchido acima.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Se precisar recriar o arquivo, acesse o Drive, crie um arquivo de texto vazio e cole o ID aqui.</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn primary" onclick="finalizarSetup()">Conectar e abrir</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">CL</div>
+    <div class="logo-name">Castro Lóssio</div>
+    <div class="logo-sub">Controle de Acordos</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="showPage('painel')" id="nav-painel"><span class="nav-icon">◉</span> Painel<span class="nav-badge" id="nav-badge-painel" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('acordos')" id="nav-acordos"><span class="nav-icon">≡</span> Acordos</button>
+    <button class="nav-item" onclick="showPage('notificacoes')" id="nav-notificacoes"><span class="nav-icon">🔔</span> Notificações<span class="nav-badge" id="nav-badge-notif" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('emails')" id="nav-emails"><span class="nav-icon">✉</span> E-mails</button>
+    <button class="nav-item" onclick="showPage('novo')" id="nav-novo"><span class="nav-icon">+</span> Novo acordo</button>
+    <button class="nav-item" onclick="showPage('config')" id="nav-config"><span class="nav-icon">⚙</span> Configurações</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Carregando...</span></div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px" id="user-email"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Painel</div>
+    <div class="topbar-actions">
+      <button class="btn sm" onclick="loadData()">↻ Sincronizar</button>
+      <span class="mono" id="hoje-label" style="color:var(--text3);font-size:11px"></span>
+      <button class="btn sm" onclick="sair()">Sair</button>
+    </div>
+  </div>
+  <div class="content" id="main-content">
+    <div class="loading-full"><div class="spinner"></div><div class="loading-text">Carregando dados...</div></div>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Gerar e-mail</div><button class="btn sm" onclick="closeModal()">✕ Fechar</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div class="loading-full" id="loading" style="display:none"><div class="spinner"></div><div class="loading-text" id="loading-text">Aguarde...</div></div>
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ─── OAUTH CONFIG ────────────────────────────────────────────────────────────
+// IMPORTANTE: substitua pelo seu Client ID do Google Cloud Console
+// Instruções em: https://console.cloud.google.com/apis/credentials
+// Tipo: "Aplicativo da Web" | Origens: o domínio onde este arquivo está hospedado
+// Escopos necessários: drive.file + gmail.compose
+const GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/userinfo.email';
+const DRIVE_API = 'https://www.googleapis.com/drive/v3';
+const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let accessToken = null;
+let driveFileId = localStorage.getItem('cl_file_id') || '1KOq78d39Al829Yuxuhui12vLy5V52WGx';
+let acordos = [];
+let currentPage = 'painel';
+let emailModalAcordo = null;
+let emailModalTipo = 'e1';
+let config = { nomeEscritorio:'Castro Lóssio Advocacia Empresarial', setor:'Setor de Acompanhamento Processual' };
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+function iniciarLogin() {
+  if (GOOGLE_CLIENT_ID === 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com') {
+    mostrarInstrucoesSetup();
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: window.location.href.split('?')[0].split('#')[0],
+    response_type: 'token',
+    scope: SCOPES,
+    prompt: 'consent'
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params;
+}
+
+function mostrarInstrucoesSetup() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('setup-screen').innerHTML = `
+    <div class="setup-box">
+      <div class="setup-title">🔧 Configure o Client ID do Google</div>
+      <div class="setup-sub">Para usar esta ferramenta de forma independente, você precisa criar um projeto no Google Cloud Console e obter um Client ID OAuth 2.0.</div>
+      <div class="step"><div class="step-num">1</div><div class="step-text">Acesse <strong><a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a></strong></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">Crie um projeto novo → <strong>Criar credenciais → ID do cliente OAuth 2.0</strong> → tipo <strong>Aplicativo da Web</strong></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">Em <strong>Origens JavaScript autorizadas</strong>, adicione a URL onde este arquivo está hospedado (ex: <code>file://</code> não funciona — use um servidor local ou GitHub Pages)</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text">Ative as APIs: <strong>Google Drive API</strong> e <strong>Gmail API</strong> em "APIs e serviços"</div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text">Copie o <strong>Client ID</strong> gerado e cole abaixo:</div></div>
+      <div class="form-group" style="margin:1rem 0">
+        <div class="form-label">Client ID</div>
+        <input id="input-client-id" class="form-input" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" />
+      </div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <div class="form-label">ID do arquivo de dados no Drive</div>
+        <input id="input-file-id" class="form-input" value="${driveFileId}" />
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn primary" onclick="salvarClientId()">Salvar e entrar</button>
+        <button class="btn" onclick="location.reload()">Voltar</button>
+      </div>
+    </div>`;
+}
+
+function salvarClientId() {
+  const cid = document.getElementById('input-client-id').value.trim();
+  const fid = document.getElementById('input-file-id').value.trim();
+  if (!cid || !cid.includes('.apps.googleusercontent.com')) {
+    alert('Client ID inválido. Deve terminar em .apps.googleusercontent.com'); return;
+  }
+  localStorage.setItem('cl_client_id', cid);
+  localStorage.setItem('cl_file_id', fid);
+  driveFileId = fid;
+  alert('Configurações salvas! A página será recarregada.');
+  location.reload();
+}
+
+function finalizarSetup() {
+  driveFileId = document.getElementById('setup-file-id').value.trim();
+  localStorage.setItem('cl_file_id', driveFileId);
+  document.getElementById('setup-screen').style.display = 'none';
+  iniciarLogin();
+}
+
+function verificarToken() {
+  // Verifica hash da URL (redirect OAuth)
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  if (params.get('access_token')) {
+    accessToken = params.get('access_token');
+    localStorage.setItem('cl_token', accessToken);
+    localStorage.setItem('cl_token_ts', Date.now().toString());
+    window.history.replaceState(null, '', window.location.pathname);
+    return true;
+  }
+  // Verifica token salvo (válido por ~55 min)
+  const saved = localStorage.getItem('cl_token');
+  const ts = parseInt(localStorage.getItem('cl_token_ts') || '0');
+  if (saved && (Date.now() - ts) < 3300000) {
+    accessToken = saved;
+    return true;
+  }
+  return false;
+}
+
+function sair() {
+  localStorage.removeItem('cl_token');
+  localStorage.removeItem('cl_token_ts');
+  location.reload();
+}
+
+// ─── GOOGLE DRIVE ──────────────────────────────────────────────────────────────
+async function driveGet(fileId) {
+  const r = await fetch(`${DRIVE_API}/files/${fileId}?alt=media`, {
+    headers: { Authorization: 'Bearer ' + accessToken }
+  });
+  if (!r.ok) throw new Error('Drive GET ' + r.status);
+  return await r.json();
+}
+
+async function drivePatch(fileId, content) {
+  const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify(content)
+  });
+  if (!r.ok) throw new Error('Drive PATCH ' + r.status);
+  return await r.json();
+}
+
+async function getUserEmail() {
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
+    const d = await r.json();
+    document.getElementById('user-email').textContent = d.email || '';
+  } catch(e) {}
+}
+
+// ─── GMAIL ─────────────────────────────────────────────────────────────────────
+async function gmailCreateDraft(to, subject, body) {
+  const email = [
+    to ? `To: ${to}` : '',
+    `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    btoa(unescape(encodeURIComponent(body)))
+  ].filter(Boolean).join('\r\n');
+
+  const encoded = btoa(email).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const r = await fetch(`${GMAIL_API}/drafts`, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: { raw: encoded } })
+  });
+  if (!r.ok) throw new Error('Gmail draft ' + r.status);
+  return await r.json();
+}
+
+// ─── DATA ──────────────────────────────────────────────────────────────────────
+async function loadData() {
+  setSyncState('syncing', 'Carregando...');
+  try {
+    const data = await driveGet(driveFileId);
+    acordos = data.acordos || [];
+    if (data.config) Object.assign(config, data.config);
+    setSyncState('ok', 'Sincronizado ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+    updateNavBadges();
+    renderPage();
+    document.getElementById('main-content').innerHTML = '';
+    renderPage();
+  } catch(e) {
+    setSyncState('error', 'Erro ao carregar');
+    toast('Erro ao carregar: ' + e.message, 'err');
+    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Não foi possível carregar.<br><br><button class="btn primary" onclick="loadData()">Tentar novamente</button></p></div>`;
+  }
+}
+
+async function saveData() {
+  setSyncState('syncing', 'Salvando...');
+  try {
+    await drivePatch(driveFileId, { version:1, ultimaAtualizacao:new Date().toISOString().slice(0,10), config, acordos });
+    setSyncState('ok', 'Salvo ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+  } catch(e) {
+    setSyncState('error', 'Erro ao salvar');
+    toast('Erro ao salvar: ' + e.message, 'err');
+  }
+}
+
+// ─── UTILS ──────────────────────────────────────────────────────────────────────
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+function daysDiff(d){const t=new Date(d);t.setHours(0,0,0,0);return Math.round((t-hoje)/86400000)}
+function fmtDate(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR')}
+function fmtBRL(v){return parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function addDays(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function getStatus(a){if(a.situacao==='PAGO')return'pago';const d=daysDiff(a.fatal);if(d<0)return'vencido';if(d===0)return'hoje';if(d<=3)return'alerta';return'pendente'}
+function badgeHtml(s,extra){const l={pago:'Pago',pendente:'Pendente',vencido:'Vencido',hoje:'Hoje',alerta:'Alerta'};return`<span class="badge ${s}">${extra||l[s]||s}</span>`}
+function eChips(a){const e=a.emailsEnviados||[];return`<div class="email-chips"><div class="echip ${e.includes('e1')?'sent':''}" title="1º e-mail">①</div><div class="echip ${e.includes('e2')?'sent':''}" title="2º e-mail">②</div><div class="echip ${e.includes('e3')?'sent':''}" title="3º e-mail">③</div></div>`}
+function setSyncState(s,l){const d=document.getElementById('sync-dot');d.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');document.getElementById('sync-label').textContent=l}
+function toast(msg,type='ok'){const c=document.getElementById('toasts');const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;c.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300)},3500)}
+function showLoading(msg){document.getElementById('loading-text').textContent=msg;document.getElementById('loading').style.display='flex'}
+function hideLoading(){document.getElementById('loading').style.display='none'}
+function closeModal(){document.getElementById('email-modal').classList.remove('open')}
+
+function getNotifications(){
+  const n=[];
+  acordos.forEach(a=>{
+    if(a.situacao==='PAGO')return;
+    const d=daysDiff(a.fatal),e=a.emailsEnviados||[];
+    if(daysDiff(addDays(a.fatal,-5))===0&&!e.includes('e1'))n.push({tipo:'e1',acordo:a,msg:`1º e-mail — vence em 5 dias (${fmtDate(a.fatal)})`});
+    if(daysDiff(addDays(a.fatal,-3))===0&&!e.includes('e2'))n.push({tipo:'e2',acordo:a,msg:`2º e-mail — vence em 3 dias (${fmtDate(a.fatal)})`});
+    if(d===0&&!e.includes('e3'))n.push({tipo:'e3',acordo:a,msg:`URGENTE: vence HOJE — 3º e-mail`});
+    if(d<0)n.push({tipo:'e3',acordo:a,msg:`Vencido há ${Math.abs(d)} dia(s) — ação necessária`});
+  });
+  return n;
+}
+
+function updateNavBadges(){
+  const n=getNotifications();
+  ['painel','notif'].forEach(id=>{
+    const el=document.getElementById(`nav-badge-${id}`);
+    if(!el)return;
+    if(n.length){el.textContent=n.length;el.style.display=''}
+    else el.style.display='none';
+  });
+}
+
+// ─── NAV ───────────────────────────────────────────────────────────────────────
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+page)?.classList.add('active');
+  const titles={painel:'Painel',acordos:'Acordos',notificacoes:'Notificações',emails:'E-mails',novo:'Novo Acordo',config:'Configurações'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+  renderPage();
+}
+
+function renderPage(){
+  const c=document.getElementById('main-content');
+  if(currentPage==='painel')renderPainel(c);
+  else if(currentPage==='acordos')renderAcordos(c);
+  else if(currentPage==='notificacoes')renderNotificacoes(c);
+  else if(currentPage==='emails')renderEmailsPage(c);
+  else if(currentPage==='novo')renderNovo(c);
+  else if(currentPage==='config')renderConfig(c);
+}
+
+// ─── PAGES ──────────────────────────────────────────────────────────────────────
+function renderPainel(c){
+  const pend=acordos.filter(a=>a.situacao!=='PAGO');
+  const urg=pend.filter(a=>{const d=daysDiff(a.fatal);return d>=0&&d<=7});
+  const venc=pend.filter(a=>daysDiff(a.fatal)<0);
+  const total=pend.reduce((s,a)=>s+parseFloat(a.valor),0);
+  const notifs=getNotifications();
+  const prox=[...acordos].filter(a=>a.situacao!=='PAGO').sort((a,b)=>new Date(a.fatal)-new Date(b.fatal)).slice(0,8);
+  c.innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Parcelas em aberto</div><div class="stat-value">${pend.length}</div><div class="stat-sub">acordos ativos</div></div>
+      <div class="stat-card danger"><div class="stat-label">Vencendo em 7 dias</div><div class="stat-value">${urg.length}</div><div class="stat-sub">requerem atenção</div></div>
+      <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value">${venc.length}</div><div class="stat-sub">ação imediata</div></div>
+      <div class="stat-card success"><div class="stat-label">Total a receber</div><div class="stat-value">${fmtBRL(total)}</div><div class="stat-sub">em aberto</div></div>
+    </div>
+    ${notifs.length?`<div class="alert-section"><div class="alert-header"><span class="alert-title">⚠ Ações necessárias hoje (${notifs.length})</span></div>
+      <div class="notif-list">${notifs.map(n=>`<div class="notif-item ${n.tipo==='e3'?'urgent':n.tipo==='e2'?'warn':'info'}">
+        <div class="notif-icon ${n.tipo}">${n.tipo==='e1'?'①':n.tipo==='e2'?'②':'⚠'}</div>
+        <div class="notif-body"><div class="notif-title">${n.acordo.reclamada} — Parcela ${n.acordo.parcela}</div>
+        <div class="notif-sub">${n.msg} · ${fmtBRL(n.acordo.valor)} · Resp: ${n.acordo.advogado||'—'}</div></div>
+        <button class="btn gmail sm" onclick="abrirModalEmail(${n.acordo.id},'${n.tipo}')">✉ Gerar e-mail</button>
+      </div>`).join('')}</div></div>`
+    :`<div class="card" style="margin-bottom:1.25rem"><div class="card-body"><div style="display:flex;align-items:center;gap:10px;color:var(--green)"><span style="font-size:1.2rem">✓</span><span style="font-size:13px;font-weight:500">Nenhuma ação pendente para hoje</span></div></div></div>`}
+    <div class="card"><div class="card-header"><span class="card-title">Próximas parcelas</span></div>
+    ${prox.length?`<table><thead><tr><th>Reclamada</th><th>Reclamante</th><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>E-mails</th><th>Status</th><th>Ação</th></tr></thead><tbody>
+      ${prox.map(a=>{const s=getStatus(a);const d=daysDiff(a.fatal);const lbl=s==='vencido'?`Venc.${Math.abs(d)}d`:s==='hoje'?'Hoje':s==='alerta'?`${d}d`:s==='pago'?'Pago':`${d}d`;return`<tr><td><strong>${a.reclamada}</strong></td><td style="color:var(--text2)">${a.reclamante}</td><td class="mono">${a.parcela}</td><td>${fmtDate(a.fatal)}</td><td>${fmtBRL(a.valor)}</td><td>${eChips(a)}</td><td>${badgeHtml(s,lbl)}</td><td><button class="btn success sm" onclick="marcarPago(${a.id})">✓ Pago</button></td></tr>`;}).join('')}
+    </tbody></table>`:`<div class="empty-state"><p>Nenhuma parcela pendente</p></div>`}</div>`;
+}
+
+function renderAcordos(c){
+  const grupos={};
+  acordos.forEach(a=>{const k=a.reclamada+'__'+a.reclamante;if(!grupos[k])grupos[k]={reclamada:a.reclamada,reclamante:a.reclamante,tipo:a.tipo,parcelas:[]};grupos[k].parcelas.push(a)});
+  const busca=document.querySelector('#busca-input')?.value||'';
+  const fst=document.querySelector('#filtro-status')?.value||'';
+  c.innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+    <input id="busca-input" class="form-input" placeholder="Buscar por empresa ou reclamante..." style="flex:1;min-width:220px;max-width:380px" value="${busca}" oninput="renderAcordos(document.getElementById('main-content'))" />
+    <select id="filtro-status" class="form-input" style="width:160px" onchange="renderAcordos(document.getElementById('main-content'))">
+      <option value="">Todos</option><option value="PENDENTE" ${fst==='PENDENTE'?'selected':''}>Pendente</option><option value="PAGO" ${fst==='PAGO'?'selected':''}>Pago</option>
+    </select>
+    <span style="font-size:12px;color:var(--text3)">${acordos.length} parcelas</span>
+  </div>
+  ${Object.values(grupos).filter(g=>{
+    const q=busca.toLowerCase();
+    if(q&&!g.reclamada.toLowerCase().includes(q)&&!g.reclamante.toLowerCase().includes(q))return false;
+    if(fst&&!g.parcelas.some(p=>p.situacao===fst))return false;
+    return true;
+  }).map(g=>{
+    const total=g.parcelas.reduce((s,p)=>s+parseFloat(p.valor),0);
+    const pagas=g.parcelas.filter(p=>p.situacao==='PAGO').length;
+    const pf=fst?g.parcelas.filter(p=>p.situacao===fst):g.parcelas;
+    return`<div class="card"><div class="card-header"><div><div style="font-size:13px;font-weight:600">${g.reclamada}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${g.reclamante} · <span class="badge tipo">${g.tipo}</span></div></div>
+    <div style="text-align:right"><div style="font-size:13px;font-weight:600">${fmtBRL(total)}</div><div style="font-size:11px;color:var(--text3)">${pagas}/${g.parcelas.length} pagas</div>
+    <div class="progress-bar" style="width:80px;margin-left:auto;margin-top:5px">${g.parcelas.map(p=>{const s=getStatus(p);const bg=p.situacao==='PAGO'?'#2D6A4F':s==='vencido'?'#922B21':s==='alerta'||s==='hoje'?'#7B5E2A':'#D3D1C7';return`<div style="background:${bg}"></div>`;}).join('')}</div></div></div>
+    <table><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Dados bancários</th><th>E-mails</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+    ${pf.map(p=>{const s=getStatus(p);return`<tr><td class="mono">${p.parcela}</td><td>${fmtDate(p.fatal)}</td><td>${fmtBRL(p.valor)}</td>
+    <td style="max-width:180px;font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.banco||''}">${p.banco||'—'}</td>
+    <td>${eChips(p)}</td><td>${badgeHtml(s)}</td>
+    <td>${p.situacao!=='PAGO'?`<div style="display:flex;gap:5px"><button class="btn gmail sm" onclick="abrirModalEmailAuto(${p.id})">✉ E-mail</button><button class="btn success sm" onclick="marcarPago(${p.id})">✓ Pago</button></div>`:'<span style="font-size:11px;color:var(--green)">✓ Quitado</span>'}</td></tr>`;}).join('')}
+    </tbody></table></div>`;
+  }).join('')||'<div class="empty-state"><div class="icon">🔍</div><p>Nenhum resultado</p></div>'}`;
+}
+
+function renderNotificacoes(c){
+  const notifs=getNotifications();
+  const prox14=acordos.filter(a=>a.situacao!=='PAGO'&&daysDiff(a.fatal)>0&&daysDiff(a.fatal)<=14).sort((a,b)=>new Date(a.fatal)-new Date(b.fatal));
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Ações necessárias hoje</span>${badgeHtml(notifs.length?'vencido':'pago',notifs.length+' item(s)')}</div>
+  <div style="padding:1rem">${notifs.length?`<div class="notif-list">${notifs.map(n=>`<div class="notif-item ${n.tipo==='e3'?'urgent':n.tipo==='e2'?'warn':'info'}">
+    <div class="notif-icon ${n.tipo}">${n.tipo==='e1'?'①':n.tipo==='e2'?'②':'⚠'}</div>
+    <div class="notif-body"><div class="notif-title">${n.acordo.reclamada} — Parcela ${n.acordo.parcela}</div>
+    <div class="notif-sub">${n.msg} · ${fmtBRL(n.acordo.valor)}</div></div>
+    <button class="btn gmail" onclick="abrirModalEmail(${n.acordo.id},'${n.tipo}')">✉ Gerar e-mail</button>
+  </div>`).join('')}</div>`:`<div class="empty-state"><div class="icon">✅</div><p>Nenhuma ação pendente hoje</p></div>`}</div></div>
+  <div class="card"><div class="card-header"><span class="card-title">Agenda — próximos 14 dias</span></div>
+  ${prox14.length?`<table><thead><tr><th>Empresa</th><th>Parcela</th><th>1º E-mail (−5d)</th><th>2º E-mail (−3d)</th><th>Prazo fatal</th><th>Valor</th><th>E-mails</th></tr></thead><tbody>
+  ${prox14.map(a=>`<tr><td><strong>${a.reclamada}</strong><div style="font-size:11px;color:var(--text3)">${a.reclamante}</div></td>
+  <td class="mono">${a.parcela}</td><td>${fmtDate(addDays(a.fatal,-5))}</td><td>${fmtDate(addDays(a.fatal,-3))}</td>
+  <td>${badgeHtml(daysDiff(a.fatal)<=3?'alerta':'pendente',fmtDate(a.fatal))}</td><td>${fmtBRL(a.valor)}</td><td>${eChips(a)}</td></tr>`).join('')}
+  </tbody></table>`:`<div class="empty-state"><p>Sem vencimentos nos próximos 14 dias</p></div>`}</div>`;
+}
+
+function renderEmailsPage(c){
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Modelos de e-mail</span></div><div class="card-body">
+  <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Vá em <strong>Acordos</strong> e clique em <strong>✉ E-mail</strong> em qualquer parcela para gerar o modelo preenchido e criar o rascunho direto no Gmail.</p>
+  <table><thead><tr><th>E-mail</th><th>Quando</th><th>Objetivo</th></tr></thead><tbody>
+  <tr><td>① 1º E-mail</td><td>5 dias antes</td><td>Aviso preventivo com dados bancários e alerta de multa</td></tr>
+  <tr><td>② 2º E-mail</td><td>3 dias antes</td><td>Reforço pedindo confirmação do pagamento</td></tr>
+  <tr><td>③ 3º E-mail</td><td>No dia do vencimento</td><td>Notificação final com urgência e ameaça de execução</td></tr>
+  </tbody></table></div></div>`;
+}
+
+function renderNovo(c){
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Cadastrar novo acordo / parcela</span></div><div class="card-body">
+  <div class="form-grid"><div class="form-group"><div class="form-label">Reclamante *</div><input id="n-reclamante" class="form-input" placeholder="Nome completo"/></div>
+  <div class="form-group"><div class="form-label">Reclamada (empresa) *</div><input id="n-reclamada" class="form-input" placeholder="Razão social"/></div></div>
+  <div class="form-grid"><div class="form-group"><div class="form-label">Nº do processo *</div><input id="n-processo" class="form-input" placeholder="0000000-00.0000.5.00.0000"/></div>
+  <div class="form-group"><div class="form-label">Tipo</div><select id="n-tipo" class="form-input"><option>ACORDO</option><option>HONORÁRIOS</option></select></div></div>
+  <div class="form-grid"><div class="form-group"><div class="form-label">Parcela *</div><input id="n-parcela" class="form-input" placeholder="ex: 1 de 10"/></div>
+  <div class="form-group"><div class="form-label">Data fatal *</div><input id="n-fatal" class="form-input" type="date"/></div></div>
+  <div class="form-grid"><div class="form-group"><div class="form-label">Valor (R$) *</div><input id="n-valor" class="form-input" type="number" step="0.01" placeholder="1500.00"/></div>
+  <div class="form-group"><div class="form-label">% Multa</div><input id="n-multa" class="form-input" type="number" placeholder="50"/></div></div>
+  <div class="form-group" style="margin-bottom:14px"><div class="form-label">Dados bancários / PIX</div>
+  <textarea id="n-banco" class="form-input" placeholder="Banco, agência, conta, PIX..."></textarea></div>
+  <div class="form-grid"><div class="form-group"><div class="form-label">Advogado / Responsável</div><input id="n-adv" class="form-input" placeholder="Nome do responsável"/></div>
+  <div class="form-group"><div class="form-label">Link da ata (Drive)</div><input id="n-link" class="form-input" placeholder="https://drive.google.com/..."/></div></div>
+  <div style="display:flex;gap:8px;margin-top:.5rem">
+  <button class="btn primary" onclick="salvarNovo()">💾 Salvar no Drive</button>
+  <button class="btn" onclick="showPage('acordos')">Cancelar</button>
+  </div></div></div>`;
+}
+
+function renderConfig(c){
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Configurações</span></div><div class="card-body">
+  <div class="form-grid"><div class="form-group"><div class="form-label">Nome do escritório</div><input id="cfg-nome" class="form-input" value="${config.nomeEscritorio}"/></div>
+  <div class="form-group"><div class="form-label">Setor</div><input id="cfg-setor" class="form-input" value="${config.setor}"/></div></div>
+  <div style="margin-top:.5rem;display:flex;gap:8px"><button class="btn primary" onclick="salvarConfig()">💾 Salvar</button></div>
+  <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+  <div style="font-size:13px;font-weight:600;margin-bottom:.75rem">Sobre</div>
+  <div class="config-item"><div><div class="config-label">Arquivo de dados</div><div class="config-sub mono">${driveFileId}</div></div>
+  <a href="https://drive.google.com/file/d/${driveFileId}" target="_blank" class="btn sm">Abrir no Drive ↗</a></div>
+  <div class="config-item"><div><div class="config-label">Versão</div><div class="config-sub">v1.0 — standalone (OAuth direto)</div></div></div>
+  <div class="config-item"><div><div class="config-label">Sessão</div><div class="config-sub">Token expira ~1h após login</div></div>
+  <button class="btn sm" onclick="sair()">Fazer logout</button></div>
+  </div></div></div>`;
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+async function marcarPago(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  a.situacao='PAGO';renderPage();updateNavBadges();
+  await saveData();toast('Parcela marcada como paga!','ok');
+}
+
+async function salvarNovo(){
+  const g=id=>(document.getElementById(id)||{}).value||'';
+  if(!g('n-reclamante')||!g('n-reclamada')||!g('n-fatal')||!g('n-parcela')){toast('Preencha os campos obrigatórios (*)','err');return}
+  const novo={id:Date.now(),reclamante:g('n-reclamante'),reclamada:g('n-reclamada'),processo:g('n-processo'),tipo:g('n-tipo'),parcela:g('n-parcela'),fatal:g('n-fatal'),valor:parseFloat(g('n-valor'))||0,multa:parseFloat(g('n-multa'))||50,banco:g('n-banco'),advogado:g('n-adv'),linkAta:g('n-link'),situacao:'PENDENTE',emailsEnviados:[]};
+  acordos.push(novo);await saveData();toast('Acordo salvo!','ok');showPage('acordos');
+}
+
+async function salvarConfig(){
+  config.nomeEscritorio=document.getElementById('cfg-nome')?.value||config.nomeEscritorio;
+  config.setor=document.getElementById('cfg-setor')?.value||config.setor;
+  await saveData();toast('Configurações salvas!','ok');
+}
+
+function abrirModalEmailAuto(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  const d=daysDiff(a.fatal);
+  abrirModalEmail(id,d>=5?'e1':d>=3?'e2':'e3');
+}
+
+function abrirModalEmail(id,tipo){
+  emailModalAcordo=acordos.find(x=>x.id===id);
+  emailModalTipo=tipo;
+  renderModal();
+  document.getElementById('email-modal').classList.add('open');
+}
+
+function gerarEmailTexto(tipo,a){
+  const dt=fmtDate(a.fatal),esc=config.nomeEscritorio,set=config.setor;
+  const t={
+    e1:{assunto:`ACOMPANHAMENTO DE ACORDO TRABALHISTA – PROCESSO Nº ${a.processo} – ${a.reclamada} – PARCELA Nº ${a.parcela}`,
+      corpo:`À: ${a.reclamada}\nA/C: Departamento Jurídico / Financeiro\n\nREFERÊNCIA: Processo Judicial nº ${a.processo}, envolvendo ${a.reclamante} e ${a.reclamada}.\n\nPrezados Senhores,\n\nReportamo-nos ao acordo trabalhista homologado nos autos do processo em epígrafe, para informar acerca da obrigação com vencimento previsto para o dia ${dt}, referente à parcela nº ${a.parcela}.\n\nPara a devida quitação, solicitamos que o depósito seja efetuado nos seguintes dados bancários:\n\n${a.banco}\n\nOutrossim, cumpre-nos salientar que o descumprimento da obrigação no prazo estabelecido acarretará a incidência da cláusula penal pactuada no acordo homologado judicialmente, a qual prevê multa de ${a.multa}% sobre o valor devido (${fmtBRL(a.valor)}), conforme expressamente determinado na decisão judicial.\n\nDesta forma, solicitamos a máxima atenção e a programação do cumprimento da obrigação no prazo assinalado.\n\nPermaneceimos à disposição para quaisquer esclarecimentos.\n\nAtenciosamente,\n${a.advogado||''}\n${set}\n${esc}`},
+    e2:{assunto:`REFORÇO DE ACOMPANHAMENTO – ACORDO TRABALHISTA – VENCIMENTO EM ${dt} – PROCESSO Nº ${a.processo}`,
+      corpo:`À: ${a.reclamada}\nA/C: Departamento Jurídico / Financeiro\n\nREFERÊNCIA: Processo Judicial nº ${a.processo}, envolvendo ${a.reclamante} e ${a.reclamada}.\n\nPrezados Senhores,\n\nReiteramos o acompanhamento referente ao acordo trabalhista homologado nos autos do processo em epígrafe, objeto de comunicação anterior.\n\nA obrigação pactuada, concernente ao pagamento da parcela nº ${a.parcela} no valor de ${fmtBRL(a.valor)}, possui vencimento assinalado para o dia ${dt}.\n\nEm face da proximidade do termo final, solicitamos especial atenção à regularização da obrigação, a fim de evitar a incidência da cláusula penal de ${a.multa}% sobre o valor devido.\n\nPedimos a gentileza de confirmar o recebimento e informar a programação para o adimplemento.\n\nPermaneceimos à disposição.\n\nAtenciosamente,\n${a.advogado||''}\n${set}\n${esc}`},
+    e3:{assunto:`URGENTE – NOTIFICAÇÃO FINAL – ACORDO TRABALHISTA – PROCESSO Nº ${a.processo} – PRAZO FATAL: ${dt}`,
+      corpo:`À: ${a.reclamada}\nA/C: Departamento Jurídico / Financeiro\n\nREFERÊNCIA: Processo Judicial nº ${a.processo}, envolvendo ${a.reclamante} e ${a.reclamada}.\n\nPrezados Senhores,\n\nPor meio da presente, em caráter de NOTIFICAÇÃO FINAL, reportamo-nos ao processo judicial em epígrafe para reiterar a exigibilidade da obrigação pactuada em acordo trabalhista homologado, cujo vencimento final está peremptoriamente fixado para o dia ${dt}.\n\nCumpre-nos informar que, até a presente data, não consta o adimplemento da obrigação referente ao pagamento da parcela nº ${a.parcela}, no valor de ${fmtBRL(a.valor)}.\n\nO não cumprimento até a data limite implicará na imediata incidência da cláusula penal de ${a.multa}%, e ensejará a adoção das medidas judiciais cabíveis para a execução forçada do título executivo judicial, sem prejuízo das demais cominações legais.\n\nRequeremos, com a máxima urgência, o imediato cumprimento e o envio do respectivo comprovante de pagamento.\n\nNa ausência de manifestação até a data supramencionada, procederemos com as medidas judiciais pertinentes.\n\nAtenciosamente,\n${a.advogado||''}\n${set}\n${esc}`}
+  };
+  return t[tipo]||t.e1;
+}
+
+function renderModal(){
+  const a=emailModalAcordo,tipo=emailModalTipo;if(!a)return;
+  const email=gerarEmailTexto(tipo,a);
+  const titulos={e1:'1º E-mail — Aviso de vencimento (−5 dias)',e2:'2º E-mail — Reforço (−3 dias)',e3:'3º E-mail — Notificação final (dia do vencimento)'};
+  document.getElementById('modal-title').textContent=titulos[tipo];
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:1rem">
+      <button class="tab-btn ${tipo==='e1'?'active':''}" onclick="emailModalTipo='e1';renderModal()">① 1º E-mail</button>
+      <button class="tab-btn ${tipo==='e2'?'active':''}" onclick="emailModalTipo='e2';renderModal()">② 2º E-mail</button>
+      <button class="tab-btn ${tipo==='e3'?'active':''}" onclick="emailModalTipo='e3';renderModal()">③ 3º E-mail</button>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:.75rem 1rem;margin-bottom:1rem;font-size:12px">
+      <strong>${a.reclamada}</strong> · ${a.reclamante} · Parcela ${a.parcela} · ${fmtDate(a.fatal)} · ${fmtBRL(a.valor)}
+    </div>
+    <div class="form-group" style="margin-bottom:.875rem">
+      <div class="form-label">Destinatário (e-mail da empresa)</div>
+      <input id="modal-dest" class="form-input" type="email" placeholder="financeiro@empresa.com.br"/>
+    </div>
+    <div class="form-group" style="margin-bottom:.875rem">
+      <div class="form-label">Assunto</div>
+      <input id="modal-assunto" class="form-input" value="${email.assunto.replace(/"/g,'&quot;')}"/>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Corpo do e-mail</div>
+      <textarea id="modal-corpo" class="form-input" rows="12">${email.corpo}</textarea>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn" onclick="copiarEmail()">📋 Copiar texto</button>
+    <button class="btn" onclick="marcarEmailEnviado()">✓ Marcar como enviado</button>
+    <button class="btn gmail" onclick="criarRascunhoGmail()">✉ Criar rascunho no Gmail</button>`;
+}
+
+function copiarEmail(){
+  const ass=document.getElementById('modal-assunto')?.value||'';
+  const corpo=document.getElementById('modal-corpo')?.value||'';
+  navigator.clipboard.writeText(`Assunto: ${ass}\n\n${corpo}`).then(()=>toast('Copiado!','ok'));
+}
+
+async function marcarEmailEnviado(){
+  const a=emailModalAcordo;if(!a)return;
+  if(!a.emailsEnviados)a.emailsEnviados=[];
+  if(!a.emailsEnviados.includes(emailModalTipo))a.emailsEnviados.push(emailModalTipo);
+  await saveData();toast('Registro de envio salvo!','ok');closeModal();renderPage();
+}
+
+async function criarRascunhoGmail(){
+  const a=emailModalAcordo;
+  const dest=document.getElementById('modal-dest')?.value||'';
+  const assunto=document.getElementById('modal-assunto')?.value||'';
+  const corpo=document.getElementById('modal-corpo')?.value||'';
+  showLoading('Criando rascunho no Gmail...');
+  try{
+    await gmailCreateDraft(dest,assunto,corpo);
+    if(!a.emailsEnviados)a.emailsEnviados=[];
+    if(!a.emailsEnviados.includes(emailModalTipo))a.emailsEnviados.push(emailModalTipo);
+    await saveData();
+    hideLoading();
+    toast('Rascunho criado no Gmail! Abra o Gmail para revisar e enviar.','info');
+    closeModal();renderPage();
+  }catch(e){
+    hideLoading();
+    toast('Erro ao criar rascunho: '+e.message,'err');
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+const savedClientId=localStorage.getItem('cl_client_id');
+if(savedClientId) {
+  // Sobrescreve o placeholder com o salvo
+  Object.defineProperty(window,'GOOGLE_CLIENT_ID_RUNTIME',{value:savedClientId});
+}
+
+document.getElementById('hoje-label').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+document.getElementById('email-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+if(verificarToken()){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='';
+  getUserEmail();
+  loadData();
+} else {
+  // Verifica se tem client id salvo
+  const cid=localStorage.getItem('cl_client_id');
+  if(cid){
+    // Redefine o client id com o salvo
+    window._CLIENT_ID=cid;
+  }
+  document.getElementById('login-screen').style.display='flex';
+}
+
+// Override iniciarLogin para usar client id salvo se houver
+const _iniciarLoginOriginal=iniciarLogin;
+window.iniciarLogin=function(){
+  const cid=localStorage.getItem('cl_client_id')||GOOGLE_CLIENT_ID;
+  if(cid==='SEU_CLIENT_ID_AQUI.apps.googleusercontent.com'){
+    mostrarInstrucoesSetup();return;
+  }
+  const params=new URLSearchParams({
+    client_id:cid,
+    redirect_uri:window.location.href.split('?')[0].split('#')[0],
+    response_type:'token',
+    scope:SCOPES,
+    prompt:'select_account'
+  });
+  window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params;
+};
+</script>
+</body>
+</html>
