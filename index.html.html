@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Acordos — Castro Lóssio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F2;--surface:#fff;--surface2:#F0EFE9;--border:#E2E0D8;--border2:#CBC9BF;--text:#1C1B18;--text2:#6B6960;--text3:#A8A69E;--accent:#1C1B18;--green:#2D6A4F;--green-bg:#D8F3DC;--green-light:#F0FAF2;--amber:#7B5E2A;--amber-bg:#FEF3C7;--amber-light:#FFFBEB;--red:#922B21;--red-bg:#FDECEA;--red-light:#FEF2F2;--blue:#1A4F8A;--blue-bg:#DBEAFE;--blue-light:#EFF6FF;--purple:#5B21B6;--purple-bg:#EDE9FE;--radius:10px;--radius-lg:14px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+.main{margin-left:220px;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+.content{padding:1.75rem 2rem}
+.sidebar-logo{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border)}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;letter-spacing:-.5px;margin-bottom:8px}
+.logo-name{font-size:13px;font-weight:600}.logo-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.nav{padding:.75rem;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text2);margin-bottom:2px;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--accent);color:#fff;font-weight:500}
+.nav-icon{font-size:15px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:#922B21;color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px}
+.nav-item.active .nav-badge{background:rgba(255,255,255,.25)}
+.sidebar-footer{padding:.75rem 1rem;border-top:1px solid var(--border)}
+.sync-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#2D6A4F;flex-shrink:0}
+.sync-dot.syncing{background:#7B5E2A;animation:blink 1s infinite}.sync-dot.error{background:#922B21}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.page-title{font-size:16px;font-weight:600}.topbar-actions{display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:500;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:600;line-height:1}.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-card.danger .stat-value{color:var(--red)}.stat-card.success .stat-value{color:var(--green);font-size:18px;margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden}
+.card-header{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600}.card-body{padding:1.25rem}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);background:var(--surface2)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}tbody tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.badge.pago{background:var(--green-bg);color:var(--green)}.badge.pendente{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.badge.vencido{background:var(--red-bg);color:var(--red)}.badge.hoje{background:var(--blue-bg);color:var(--blue)}
+.badge.alerta{background:var(--amber-bg);color:var(--amber)}.badge.tipo{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-bg);font-size:10px}
+.badge.acordo{background:var(--green-light);color:var(--green);border:1px solid var(--green-bg);font-size:10px}
+.badge.honorarios{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-bg);font-size:10px}
+.badge.fgts{background:var(--purple-bg);color:var(--purple);font-size:10px}
+.badge.verbas{background:var(--amber-bg);color:var(--amber);font-size:10px}
+.badge.custas{background:var(--red-light);color:var(--red);font-size:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--surface2);border-color:var(--text3)}.btn:active{transform:scale(.98)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{background:#333}
+.btn.success{background:var(--green-light);color:var(--green);border-color:#A7D9B4}.btn.success:hover{background:var(--green-bg)}
+.btn.gmail{background:var(--red-light);color:var(--red);border-color:#F5C6C3}.btn.gmail:hover{background:var(--red-bg)}
+.btn.warning{background:var(--amber-bg);color:var(--amber);border-color:#FDE68A}.btn.warning:hover{background:var(--amber-light)}
+.btn.sm{padding:4px 9px;font-size:11px}
+.notif-list{display:flex;flex-direction:column;gap:8px}
+.notif-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.notif-item.urgent{border-color:#F5C6C3;background:var(--red-light)}.notif-item.warn{border-color:#FDE68A;background:var(--amber-light)}.notif-item.info{border-color:#BFDBFE;background:var(--blue-light)}
+.notif-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:600}
+.notif-icon.e1{background:var(--blue-bg);color:var(--blue)}.notif-icon.e2{background:var(--amber-bg);color:var(--amber)}.notif-icon.e3{background:var(--red-bg);color:var(--red)}
+.notif-body{flex:1}.notif-title{font-size:13px;font-weight:500}.notif-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.email-chips{display:flex;gap:4px}
+.echip{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:1px solid var(--border);color:var(--text3);background:var(--surface2)}
+.echip.sent{background:var(--green-bg);color:var(--green);border-color:#A7D9B4}
+.progress-bar{height:5px;border-radius:3px;overflow:hidden;display:flex;gap:2px;margin-top:4px}
+.progress-bar div{flex:1;border-radius:2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.form-input{padding:8px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);transition:border .15s}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(28,27,24,.06)}
+textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
+.section-divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+.section-subtitle{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-subtitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.tipo-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;margin-right:4px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:720px;max-width:calc(100vw - 2rem);max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md);transform:translateY(16px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:15px;font-weight:600}.modal-body{padding:1.5rem}.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--surface2)}
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{padding:11px 16px;border-radius:var(--radius);font-size:12.5px;font-weight:500;box-shadow:var(--shadow-md);transform:translateX(120%);transition:transform .25s;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(0)}.toast.ok{background:var(--green-bg);color:var(--green);border:1px solid #A7D9B4}
+.toast.err{background:var(--red-bg);color:var(--red);border:1px solid #F5C6C3}.toast.info{background:var(--blue-bg);color:var(--blue);border:1px solid #BFDBFE}
+.loading-full{position:fixed;inset:0;background:rgba(247,246,242,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:150}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}.loading-text{font-size:13px;color:var(--text2)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}.empty-state .icon{font-size:2.5rem;margin-bottom:.75rem}.empty-state p{font-size:13px}
+.mono{font-family:'DM Mono',monospace;font-size:11px}
+.alert-section{border:1px solid #F5C6C3;border-radius:var(--radius-lg);background:var(--red-light);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.alert-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}.alert-title{font-size:13px;font-weight:600;color:var(--red)}
+.tab-row{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
+.tab-btn{padding:8px 14px;border:none;background:transparent;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text2);font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+.config-item{display:flex;align-items:center;justify-content:space-between;padding:.875rem 0;border-bottom:1px solid var(--border)}
+.config-item:last-child{border-bottom:none}.config-label{font-size:13px;font-weight:500}.config-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:420px;text-align:center;box-shadow:var(--shadow-md)}
+.login-logo{width:52px;height:52px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;margin:0 auto 1.25rem}
+.login-title{font-size:20px;font-weight:600;margin-bottom:.5rem}.login-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem;line-height:1.6}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 20px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;color:var(--text);font-family:'DM Sans',sans-serif;width:100%;transition:all .15s}
+.google-btn:hover{background:var(--surface2)}.google-icon{width:20px;height:20px}.login-note{font-size:11px;color:var(--text3);margin-top:1rem;line-height:1.6}
+.setup-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:190}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:480px;box-shadow:var(--shadow-md)}
+.setup-title{font-size:16px;font-weight:600;margin-bottom:.5rem}.setup-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.step{display:flex;gap:12px;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.step-text{font-size:12px;color:var(--text2);line-height:1.6}.step-text strong{color:var(--text)}
+.comp-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;background:var(--green-bg);color:var(--green);cursor:pointer}
+.comp-badge:hover{background:var(--green-light)}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">CL</div>
+    <div class="login-title">Controle de Acordos</div>
+    <div class="login-sub">Castro Lóssio Advocacia Empresarial<br>Faça login com sua conta Google para acessar os dados do escritório.</div>
+    <button class="google-btn" onclick="iniciarLogin()">
+      <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
+    </button>
+    <div class="login-note">Necessário autorizar acesso ao Google Drive e Gmail para sincronização dos dados e criação de rascunhos de e-mail.</div>
+  </div>
+</div>
+
+<div class="setup-screen" id="setup-screen" style="display:none">
+  <div class="setup-box" id="setup-content"></div>
+</div>
+
+<div id="app" style="display:none">
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">CL</div>
+    <div class="logo-name">Castro Lóssio</div>
+    <div class="logo-sub">Controle de Acordos</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="showPage('painel')" id="nav-painel"><span class="nav-icon">◉</span> Painel<span class="nav-badge" id="nav-badge-painel" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('acordos')" id="nav-acordos"><span class="nav-icon">≡</span> Acordos</button>
+    <button class="nav-item" onclick="showPage('notificacoes')" id="nav-notificacoes"><span class="nav-icon">🔔</span> Notificações<span class="nav-badge" id="nav-badge-notif" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('emails')" id="nav-emails"><span class="nav-icon">✉</span> E-mails</button>
+    <button class="nav-item" onclick="showPage('novo')" id="nav-novo"><span class="nav-icon">+</span> Novo acordo</button>
+    <button class="nav-item" onclick="showPage('config')" id="nav-config"><span class="nav-icon">⚙</span> Configurações</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Carregando...</span></div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px" id="user-email"></div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Painel</div>
+    <div class="topbar-actions">
+      <button class="btn sm" onclick="loadData()">↻ Sincronizar</button>
+      <span class="mono" id="hoje-label" style="color:var(--text3);font-size:11px"></span>
+      <button class="btn sm" onclick="sair()">Sair</button>
+    </div>
+  </div>
+  <div class="content" id="main-content"></div>
+</div>
+</div>
+
+<!-- MODAL EMAIL -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Gerar e-mail</div><button class="btn sm" onclick="closeModal('email-modal')">✕</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PARCELA -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="width:560px">
+    <div class="modal-header"><div class="modal-title">Editar parcela</div><button class="btn sm" onclick="closeModal('edit-modal')">✕</button></div>
+    <div class="modal-body" id="edit-modal-body"></div>
+    <div class="modal-footer" id="edit-modal-footer"></div>
+  </div>
+</div>
+
+<div class="loading-full" id="loading" style="display:none"><div class="spinner"></div><div class="loading-text" id="loading-text">Aguarde...</div></div>
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const DRIVE_API='https://www.googleapis.com/drive/v3';
+const GMAIL_API='https://www.googleapis.com/gmail/v1/users/me';
+const SCOPES='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/userinfo.email';
+
+let accessToken=null;
+let driveFileId=localStorage.getItem('cl_file_id')||'1Ye1DE2vRzikgd9adPDUWpl25gp7fHNUG';
+let acordos=[];
+let currentPage='painel';
+let emailModalAcordo=null;
+let emailModalTipo='e1';
+let config={nomeEscritorio:'Castro Lóssio Advocacia Empresarial',setor:'Setor de Acompanhamento Processual'};
+
+// ─── TIPOS DE VERBAS ─────────────────────────────────────────────────────────
+const TIPOS_VERBAS=['ACORDO','HONORÁRIOS','FGTS','VERBAS','CUSTAS','INSS','OUTROS'];
+const TIPO_COLORS={
+  'ACORDO':'acordo','HONORÁRIOS':'honorarios','FGTS':'fgts',
+  'VERBAS':'verbas','CUSTAS':'custas','INSS':'fgts','OUTROS':'pendente'
+};
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+function iniciarLogin(){
+  const cid=localStorage.getItem('cl_client_id')||'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com';
+  if(cid==='SEU_CLIENT_ID_AQUI.apps.googleusercontent.com'){mostrarSetup();return;}
+  const params=new URLSearchParams({client_id:cid,redirect_uri:window.location.href.split('?')[0].split('#')[0],response_type:'token',scope:SCOPES,prompt:'select_account'});
+  window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params;
+}
+
+function mostrarSetup(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('setup-content').innerHTML=`
+    <div class="setup-title">🔧 Configurar Client ID do Google</div>
+    <div class="setup-sub">Para usar esta ferramenta de forma independente, você precisa de um Client ID OAuth 2.0 do Google Cloud Console.</div>
+    <div class="step"><div class="step-num">1</div><div class="step-text">Acesse <strong><a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a></strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text">Criar credenciais → <strong>ID do cliente OAuth 2.0</strong> → Aplicativo da Web</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">Origens autorizadas: <strong>https://castrolossioadv.github.io</strong><br>URI de redirecionamento: <strong>https://castrolossioadv.github.io/controle-acordos/</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text">Ative: <strong>Google Drive API</strong> e <strong>Gmail API</strong></div></div>
+    <div class="form-group" style="margin:1rem 0"><div class="form-label">Client ID</div><input id="input-client-id" class="form-input" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com"/></div>
+    <div class="form-group" style="margin-bottom:1rem"><div class="form-label">ID do arquivo de dados no Drive</div><input id="input-file-id" class="form-input" value="${driveFileId}"/></div>
+    <div style="display:flex;gap:8px"><button class="btn primary" onclick="salvarClientId()">Salvar e entrar</button><button class="btn" onclick="location.reload()">Voltar</button></div>`;
+}
+
+function salvarClientId(){
+  const cid=document.getElementById('input-client-id').value.trim();
+  const fid=document.getElementById('input-file-id').value.trim();
+  if(!cid||!cid.includes('.apps.googleusercontent.com')){alert('Client ID inválido.');return;}
+  localStorage.setItem('cl_client_id',cid);
+  localStorage.setItem('cl_file_id',fid);
+  driveFileId=fid;
+  alert('Salvo! Recarregando...');
+  location.reload();
+}
+
+function verificarToken(){
+  const hash=window.location.hash.substring(1);
+  const params=new URLSearchParams(hash);
+  if(params.get('access_token')){
+    accessToken=params.get('access_token');
+    localStorage.setItem('cl_token',accessToken);
+    localStorage.setItem('cl_token_ts',Date.now().toString());
+    window.history.replaceState(null,'',window.location.pathname);
+    return true;
+  }
+  const saved=localStorage.getItem('cl_token');
+  const ts=parseInt(localStorage.getItem('cl_token_ts')||'0');
+  if(saved&&(Date.now()-ts)<3300000){accessToken=saved;return true;}
+  return false;
+}
+
+function sair(){localStorage.removeItem('cl_token');localStorage.removeItem('cl_token_ts');location.reload();}
+
+// ─── DRIVE ────────────────────────────────────────────────────────────────────
+async function driveGet(fileId){
+  const r=await fetch(`${DRIVE_API}/files/${fileId}?alt=media`,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!r.ok)throw new Error('Drive GET '+r.status);
+  const text=await r.text();
+  try{return JSON.parse(text);}
+  catch(e){return{version:1,ultimaAtualizacao:new Date().toISOString().slice(0,10),config,acordos:[]};}
+}
+
+async function drivePatch(fileId,content){
+  const body=JSON.stringify(content);
+  const r=await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,{
+    method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body
+  });
+  if(!r.ok)throw new Error('Drive PATCH '+r.status);
+  return await r.json();
+}
+
+async function driveUploadFile(file){
+  const metadata={name:`Comprovante_${new Date().toISOString().slice(0,10)}_${file.name}`};
+  const form=new FormData();
+  form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));
+  form.append('file',file);
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+    method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
+  });
+  if(!r.ok)throw new Error('Upload '+r.status);
+  return await r.json();
+}
+
+async function getUserEmail(){
+  try{const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+accessToken}});const d=await r.json();document.getElementById('user-email').textContent=d.email||'';}catch(e){}
+}
+
+// ─── GMAIL ────────────────────────────────────────────────────────────────────
+async function gmailCreateDraft(to,subject,body){
+  const email=[to?`To: ${to}`:'',`Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,'MIME-Version: 1.0','Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',btoa(unescape(encodeURIComponent(body)))].filter(Boolean).join('\r\n');
+  const encoded=btoa(email).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const r=await fetch(`${GMAIL_API}/drafts`,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({message:{raw:encoded}})});
+  if(!r.ok)throw new Error('Gmail draft '+r.status);
+  return await r.json();
+}
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+async function loadData(){
+  setSyncState('syncing','Carregando...');
+  try{
+    const data=await driveGet(driveFileId);
+    acordos=data.acordos||[];
+    if(data.config)Object.assign(config,data.config);
+    setSyncState('ok','Sincronizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+    updateNavBadges();renderPage();
+  }catch(e){
+    setSyncState('error','Erro ao carregar');
+    toast('Erro ao carregar: '+e.message,'err');
+    document.getElementById('main-content').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><p>Não foi possível carregar.<br><br><button class="btn primary" onclick="loadData()">Tentar novamente</button></p></div>`;
+  }
+}
+
+async function saveData(){
+  setSyncState('syncing','Salvando...');
+  try{
+    await drivePatch(driveFileId,{version:1,ultimaAtualizacao:new Date().toISOString().slice(0,10),config,acordos});
+    setSyncState('ok','Salvo '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){setSyncState('error','Erro ao salvar');toast('Erro ao salvar: '+e.message,'err');}
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+const hoje=new Date();hoje.setHours(0,0,0,0);
+function daysDiff(d){const t=new Date(d);t.setHours(0,0,0,0);return Math.round((t-hoje)/86400000);}
+function fmtDate(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
+function fmtBRL(v){return parseFloat(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function addDays(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function getStatus(a){if(a.situacao==='PAGO')return'pago';const d=daysDiff(a.fatal);if(d<0)return'vencido';if(d===0)return'hoje';if(d<=3)return'alerta';return'pendente';}
+function badgeHtml(s,extra){const l={pago:'Pago',pendente:'Pendente',vencido:'Vencido',hoje:'Hoje',alerta:'Alerta'};return`<span class="badge ${s}">${extra||l[s]||s}</span>`;}
+function tipoBadge(t){const c=TIPO_COLORS[t]||'pendente';return`<span class="badge ${c}">${t}</span>`;}
+function eChips(a){const e=a.emailsEnviados||[];return`<div class="email-chips"><div class="echip ${e.includes('e1')?'sent':''}" title="1º e-mail">①</div><div class="echip ${e.includes('e2')?'sent':''}" title="2º e-mail">②</div><div class="echip ${e.includes('e3')?'sent':''}" title="3º e-mail">③</div></div>`;}
+function compBadge(a){const n=(a.comprovantes||[]).length;if(n===0)return'';return`<span class="comp-badge" onclick="verComprovantes(${a.id})" title="Ver comprovantes">📎 ${n}</span>`;}
+function setSyncState(s,l){const d=document.getElementById('sync-dot');d.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');document.getElementById('sync-label').textContent=l;}
+function toast(msg,type='ok'){const c=document.getElementById('toasts');const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;c.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300)},3500);}
+function showLoading(msg){document.getElementById('loading-text').textContent=msg;document.getElementById('loading').style.display='flex';}
+function hideLoading(){document.getElementById('loading').style.display='none';}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function getNotifications(){
+  const n=[];
+  acordos.forEach(a=>{
+    if(a.situacao==='PAGO')return;
+    const d=daysDiff(a.fatal),e=a.emailsEnviados||[];
+    if(daysDiff(addDays(a.fatal,-5))===0&&!e.includes('e1'))n.push({tipo:'e1',acordo:a,msg:`1º e-mail — vence em 5 dias (${fmtDate(a.fatal)})`});
+    if(daysDiff(addDays(a.fatal,-3))===0&&!e.includes('e2'))n.push({tipo:'e2',acordo:a,msg:`2º e-mail — vence em 3 dias (${fmtDate(a.fatal)})`});
+    if(d===0&&!e.includes('e3'))n.push({tipo:'e3',acordo:a,msg:`URGENTE: vence HOJE`});
+    if(d<0)n.push({tipo:'e3',acordo:a,msg:`Vencido há ${Math.abs(d)} dia(s) — ação necessária`});
+  });
+  return n;
+}
+
+function updateNavBadges(){
+  const n=getNotifications();
+  ['painel','notif'].forEach(id=>{
+    const el=document.getElementById(`nav-badge-${id}`);if(!el)return;
+    if(n.length){el.textContent=n.length;el.style.display='';}else el.style.display='none';
+  });
+}
+
+// Ordenar acordos por data fatal crescente
+function acordosOrdenados(lista){
+  return [...(lista||acordos)].sort((a,b)=>new Date(a.fatal)-new Date(b.fatal));
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+page)?.classList.add('active');
+  const titles={painel:'Painel',acordos:'Acordos',notificacoes:'Notificações',emails:'E-mails',novo:'Novo Acordo',config:'Configurações'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+  renderPage();
+}
+
+function renderPage(){
+  const c=document.getElementById('main-content');
+  if(currentPage==='painel')renderPainel(c);
+  else if(currentPage==='acordos')renderAcordos(c);
+  else if(currentPage==='notificacoes')renderNotificacoes(c);
+  else if(currentPage==='emails')renderEmailsPage(c);
+  else if(currentPage==='novo')renderNovo(c);
+  else if(currentPage==='config')renderConfig(c);
+}
+
+// ─── PÁGINAS ─────────────────────────────────────────────────────────────────
+function renderPainel(c){
+  const pend=acordos.filter(a=>a.situacao!=='PAGO');
+  const urg=pend.filter(a=>{const d=daysDiff(a.fatal);return d>=0&&d<=7;});
+  const venc=pend.filter(a=>daysDiff(a.fatal)<0);
+  const total=pend.reduce((s,a)=>s+parseFloat(a.valor||0),0);
+  const notifs=getNotifications();
+  const prox=acordosOrdenados(acordos.filter(a=>a.situacao!=='PAGO')).slice(0,10);
+
+  c.innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Parcelas em aberto</div><div class="stat-value">${pend.length}</div><div class="stat-sub">acordos ativos</div></div>
+      <div class="stat-card danger"><div class="stat-label">Vencendo em 7 dias</div><div class="stat-value">${urg.length}</div><div class="stat-sub">requerem atenção</div></div>
+      <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value">${venc.length}</div><div class="stat-sub">ação imediata</div></div>
+      <div class="stat-card success"><div class="stat-label">Total a receber</div><div class="stat-value">${fmtBRL(total)}</div><div class="stat-sub">em aberto</div></div>
+    </div>
+    ${notifs.length?`<div class="alert-section"><div class="alert-header"><span class="alert-title">⚠ Ações necessárias hoje (${notifs.length})</span></div>
+    <div class="notif-list">${notifs.map(n=>`<div class="notif-item ${n.tipo==='e3'?'urgent':n.tipo==='e2'?'warn':'info'}">
+      <div class="notif-icon ${n.tipo}">${n.tipo==='e1'?'①':n.tipo==='e2'?'②':'⚠'}</div>
+      <div class="notif-body"><div class="notif-title">${n.acordo.reclamada} — Parcela ${n.acordo.parcela}</div>
+      <div class="notif-sub">${n.msg} · ${fmtBRL(n.acordo.valor)} · Resp: ${n.acordo.advogado||'—'}</div></div>
+      <button class="btn gmail sm" onclick="abrirModalEmail(${n.acordo.id},'${n.tipo}')">✉ Gerar e-mail</button>
+    </div>`).join('')}</div></div>`
+    :`<div class="card" style="margin-bottom:1.25rem"><div class="card-body"><div style="display:flex;align-items:center;gap:10px;color:var(--green)"><span style="font-size:1.2rem">✓</span><span style="font-size:13px;font-weight:500">Nenhuma ação pendente para hoje</span></div></div></div>`}
+    <div class="card"><div class="card-header"><span class="card-title">Próximas parcelas — ordem cronológica</span></div>
+    ${prox.length?`<table><thead><tr><th>Vencimento</th><th>Reclamada</th><th>Tipo</th><th>Parcela</th><th>Valor</th><th>E-mails</th><th>Comp.</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+    ${prox.map(a=>{const s=getStatus(a);const d=daysDiff(a.fatal);const lbl=s==='vencido'?`Venc.${Math.abs(d)}d`:s==='hoje'?'Hoje':s==='alerta'?`${d}d`:`${d}d`;return`<tr>
+      <td><strong>${fmtDate(a.fatal)}</strong></td>
+      <td>${a.reclamada}<div style="font-size:10px;color:var(--text3)">${a.reclamante}</div></td>
+      <td>${tipoBadge(a.tipo||'ACORDO')}</td>
+      <td class="mono">${a.parcela}</td>
+      <td>${fmtBRL(a.valor)}</td>
+      <td>${eChips(a)}</td>
+      <td>${compBadge(a)}<button class="btn sm" onclick="uploadComprovante(${a.id})" title="Anexar comprovante" style="padding:3px 6px">📎</button></td>
+      <td>${badgeHtml(s,lbl)}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn success sm" onclick="marcarPago(${a.id})">✓ Pago</button>
+        <button class="btn sm" onclick="abrirEditar(${a.id})" title="Editar">✏</button>
+      </div></td>
+    </tr>`;}).join('')}</tbody></table>`:`<div class="empty-state"><p>Nenhuma parcela pendente</p></div>`}</div>`;
+}
+
+function renderAcordos(c){
+  const grupos={};
+  acordos.forEach(a=>{
+    const k=a.reclamada+'__'+a.reclamante;
+    if(!grupos[k])grupos[k]={reclamada:a.reclamada,reclamante:a.reclamante,parcelas:[]};
+    grupos[k].parcelas.push(a);
+  });
+  const busca=document.querySelector('#busca-input')?.value||'';
+  const fst=document.querySelector('#filtro-status')?.value||'';
+  const ftipo=document.querySelector('#filtro-tipo')?.value||'';
+
+  c.innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+    <input id="busca-input" class="form-input" placeholder="Buscar por empresa ou reclamante..." style="flex:1;min-width:220px;max-width:320px" value="${busca}" oninput="renderAcordos(document.getElementById('main-content'))"/>
+    <select id="filtro-status" class="form-input" style="width:140px" onchange="renderAcordos(document.getElementById('main-content'))">
+      <option value="">Todos status</option><option value="PENDENTE" ${fst==='PENDENTE'?'selected':''}>Pendente</option><option value="PAGO" ${fst==='PAGO'?'selected':''}>Pago</option>
+    </select>
+    <select id="filtro-tipo" class="form-input" style="width:150px" onchange="renderAcordos(document.getElementById('main-content'))">
+      <option value="">Todos os tipos</option>${TIPOS_VERBAS.map(t=>`<option value="${t}" ${ftipo===t?'selected':''}>${t}</option>`).join('')}
+    </select>
+    <span style="font-size:12px;color:var(--text3)">${acordos.length} parcelas</span>
+  </div>
+  ${Object.values(grupos).filter(g=>{
+    const q=busca.toLowerCase();
+    if(q&&!g.reclamada.toLowerCase().includes(q)&&!g.reclamante.toLowerCase().includes(q))return false;
+    if(fst&&!g.parcelas.some(p=>p.situacao===fst))return false;
+    if(ftipo&&!g.parcelas.some(p=>p.tipo===ftipo))return false;
+    return true;
+  }).map(g=>{
+    const pFilt=acordosOrdenados(g.parcelas.filter(p=>{
+      if(fst&&p.situacao!==fst)return false;
+      if(ftipo&&p.tipo!==ftipo)return false;
+      return true;
+    }));
+    const total=pFilt.reduce((s,p)=>s+parseFloat(p.valor||0),0);
+    const pagas=g.parcelas.filter(p=>p.situacao==='PAGO').length;
+    // Group by tipo
+    const tiposPresentes=[...new Set(g.parcelas.map(p=>p.tipo||'ACORDO'))];
+    return`<div class="card">
+      <div class="card-header">
+        <div><div style="font-size:13px;font-weight:600">${g.reclamada}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${g.reclamante} &nbsp;·&nbsp; ${tiposPresentes.map(t=>tipoBadge(t)).join(' ')}</div></div>
+        <div style="text-align:right"><div style="font-size:13px;font-weight:600">${fmtBRL(total)}</div>
+        <div style="font-size:11px;color:var(--text3)">${pagas}/${g.parcelas.length} pagas</div>
+        <div class="progress-bar" style="width:100px;margin-left:auto;margin-top:5px">${acordosOrdenados(g.parcelas).map(p=>{const s=getStatus(p);const bg=p.situacao==='PAGO'?'#2D6A4F':s==='vencido'?'#922B21':s==='alerta'||s==='hoje'?'#7B5E2A':'#D3D1C7';return`<div style="background:${bg}" title="${p.parcela}: ${fmtDate(p.fatal)}"></div>`;}).join('')}</div></div>
+      </div>
+      <table><thead><tr><th>Vencimento</th><th>Tipo</th><th>Parcela</th><th>Valor</th><th>Dados Bancários</th><th>E-mails</th><th>Comp.</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+      ${pFilt.map(p=>{const s=getStatus(p);return`<tr>
+        <td><strong>${fmtDate(p.fatal)}</strong></td>
+        <td>${tipoBadge(p.tipo||'ACORDO')}</td>
+        <td class="mono">${p.parcela}</td>
+        <td>${fmtBRL(p.valor)}</td>
+        <td style="max-width:180px;font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.banco||''}">${p.banco||'—'}</td>
+        <td>${eChips(p)}</td>
+        <td>${compBadge(p)}<button class="btn sm" onclick="uploadComprovante(${p.id})" title="Anexar" style="padding:3px 6px">📎</button></td>
+        <td>${badgeHtml(s)}</td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+          ${p.situacao!=='PAGO'?`<button class="btn gmail sm" onclick="abrirModalEmailAuto(${p.id})">✉</button>
+          <button class="btn success sm" onclick="marcarPago(${p.id})">✓</button>`:''}
+          <button class="btn sm" onclick="abrirEditar(${p.id})" title="Editar">✏</button>
+          ${p.situacao==='PAGO'?`<button class="btn warning sm" onclick="desfazerPago(${p.id})" title="Desfazer baixa">↩</button>`:''}
+        </div></td>
+      </tr>`;}).join('')}
+      </tbody></table></div>`;
+  }).join('')||'<div class="empty-state"><div class="icon">🔍</div><p>Nenhum resultado encontrado</p></div>'}`;
+}
+
+function renderNotificacoes(c){
+  const notifs=getNotifications();
+  const prox14=acordosOrdenados(acordos.filter(a=>a.situacao!=='PAGO'&&daysDiff(a.fatal)>0&&daysDiff(a.fatal)<=14));
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Ações necessárias hoje</span>${badgeHtml(notifs.length?'vencido':'pago',notifs.length+' item(s)')}</div>
+  <div style="padding:1rem">${notifs.length?`<div class="notif-list">${notifs.map(n=>`<div class="notif-item ${n.tipo==='e3'?'urgent':n.tipo==='e2'?'warn':'info'}">
+    <div class="notif-icon ${n.tipo}">${n.tipo==='e1'?'①':n.tipo==='e2'?'②':'⚠'}</div>
+    <div class="notif-body"><div class="notif-title">${n.acordo.reclamada} — ${tipoBadge(n.acordo.tipo||'ACORDO')} Parcela ${n.acordo.parcela}</div>
+    <div class="notif-sub">${n.msg} · ${fmtBRL(n.acordo.valor)}</div></div>
+    <button class="btn gmail" onclick="abrirModalEmail(${n.acordo.id},'${n.tipo}')">✉ Gerar e-mail</button>
+  </div>`).join('')}</div>`:`<div class="empty-state"><div class="icon">✅</div><p>Nenhuma ação pendente hoje</p></div>`}</div></div>
+  <div class="card"><div class="card-header"><span class="card-title">Agenda — próximos 14 dias (ordem cronológica)</span></div>
+  ${prox14.length?`<table><thead><tr><th>Prazo fatal</th><th>1º E-mail (−5d)</th><th>2º E-mail (−3d)</th><th>Empresa</th><th>Tipo</th><th>Parcela</th><th>Valor</th><th>E-mails</th></tr></thead><tbody>
+  ${prox14.map(a=>`<tr>
+    <td>${badgeHtml(daysDiff(a.fatal)<=3?'alerta':'pendente',fmtDate(a.fatal))}</td>
+    <td>${fmtDate(addDays(a.fatal,-5))}</td><td>${fmtDate(addDays(a.fatal,-3))}</td>
+    <td><strong>${a.reclamada}</strong><div style="font-size:10px;color:var(--text3)">${a.reclamante}</div></td>
+    <td>${tipoBadge(a.tipo||'ACORDO')}</td>
+    <td class="mono">${a.parcela}</td><td>${fmtBRL(a.valor)}</td><td>${eChips(a)}</td>
+  </tr>`).join('')}</tbody></table>`:`<div class="empty-state"><p>Sem vencimentos nos próximos 14 dias</p></div>`}</div>`;
+}
+
+function renderEmailsPage(c){
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Modelos de e-mail</span></div><div class="card-body">
+  <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Vá em <strong>Acordos</strong> e clique em <strong>✉</strong> em qualquer parcela para gerar o modelo preenchido automaticamente e criar o rascunho no Gmail.</p>
+  <table><thead><tr><th>E-mail</th><th>Quando</th><th>Objetivo</th></tr></thead><tbody>
+  <tr><td>① 1º E-mail</td><td>5 dias antes do vencimento</td><td>Aviso preventivo com dados bancários e alerta de multa</td></tr>
+  <tr><td>② 2º E-mail</td><td>3 dias antes do vencimento</td><td>Reforço pedindo confirmação do pagamento</td></tr>
+  <tr><td>③ 3º E-mail</td><td>No dia do vencimento</td><td>Notificação final com urgência e ameaça de execução</td></tr>
+  </tbody></table></div></div>`;
+}
+
+function renderNovo(c){
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Cadastrar novo acordo / parcela</span></div><div class="card-body">
+
+    <div class="section-subtitle">Dados do processo</div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Reclamante *</div><input id="n-reclamante" class="form-input" placeholder="Nome completo do reclamante"/></div>
+      <div class="form-group"><div class="form-label">Reclamada (empresa) *</div><input id="n-reclamada" class="form-input" placeholder="Razão social da empresa"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Nº do processo</div><input id="n-processo" class="form-input" placeholder="0000000-00.0000.5.00.0000"/></div>
+      <div class="form-group"><div class="form-label">Link da ata/acordo (Drive)</div><input id="n-link" class="form-input" placeholder="https://drive.google.com/..."/></div>
+    </div>
+
+    <hr class="section-divider">
+    <div class="section-subtitle">Tipo da verba e parcelamento</div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Tipo da verba *</div>
+        <select id="n-tipo" class="form-input">
+          ${TIPOS_VERBAS.map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Parcela * (ex: 1 de 10)</div><input id="n-parcela" class="form-input" placeholder="1 de 10"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Data fatal de pagamento *</div><input id="n-fatal" class="form-input" type="date"/></div>
+      <div class="form-group"><div class="form-label">Valor (R$) *</div><input id="n-valor" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+    </div>
+
+    <hr class="section-divider">
+    <div class="section-subtitle">Valores do acordo (opcional — para referência)</div>
+    <div class="form-grid-3">
+      <div class="form-group"><div class="form-label">Valor total do acordo</div><input id="n-vl-acordo" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+      <div class="form-group"><div class="form-label">Honorários</div><input id="n-vl-honorarios" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+      <div class="form-group"><div class="form-label">FGTS</div><input id="n-vl-fgts" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-group"><div class="form-label">Verbas rescisórias</div><input id="n-vl-verbas" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+      <div class="form-group"><div class="form-label">Custas</div><input id="n-vl-custas" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+      <div class="form-group"><div class="form-label">INSS</div><input id="n-vl-inss" class="form-input" type="number" step="0.01" placeholder="0.00"/></div>
+    </div>
+
+    <hr class="section-divider">
+    <div class="section-subtitle">Dados bancários e responsável</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <div class="form-label">Dados bancários / PIX</div>
+      <textarea id="n-banco" class="form-input" placeholder="Banco, agência, conta corrente, titular, CPF/CNPJ, chave PIX..."></textarea>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Advogado / Responsável</div><input id="n-adv" class="form-input" placeholder="Nome do responsável"/></div>
+      <div class="form-group"><div class="form-label">% Multa (cláusula penal)</div><input id="n-multa" class="form-input" type="number" placeholder="50"/></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn primary" onclick="salvarNovo()">💾 Salvar no Drive</button>
+      <button class="btn" onclick="showPage('acordos')">Cancelar</button>
+    </div>
+  </div></div>`;
+}
+
+function renderConfig(c){
+  c.innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Configurações</span></div><div class="card-body">
+  <div class="form-grid">
+    <div class="form-group"><div class="form-label">Nome do escritório</div><input id="cfg-nome" class="form-input" value="${config.nomeEscritorio}"/></div>
+    <div class="form-group"><div class="form-label">Setor</div><input id="cfg-setor" class="form-input" value="${config.setor}"/></div>
+  </div>
+  <div style="margin-top:.5rem;display:flex;gap:8px"><button class="btn primary" onclick="salvarConfig()">💾 Salvar</button></div>
+  <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+  <div style="font-size:13px;font-weight:600;margin-bottom:.75rem">Sobre</div>
+  <div class="config-item"><div><div class="config-label">Arquivo de dados</div><div class="config-sub mono">${driveFileId}</div></div>
+  <a href="https://drive.google.com/file/d/${driveFileId}" target="_blank" class="btn sm">Abrir no Drive ↗</a></div>
+  <div class="config-item"><div><div class="config-label">Versão</div><div class="config-sub">v2.0 — Castro Lóssio Controle de Acordos</div></div></div>
+  <div class="config-item"><div><div class="config-label">Sessão Google</div><div class="config-sub">Token expira ~1h após login</div></div>
+  <button class="btn sm" onclick="sair()">Logout</button></div>
+  </div></div></div>`;
+}
+
+// ─── AÇÕES ────────────────────────────────────────────────────────────────────
+async function marcarPago(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  a.situacao='PAGO';renderPage();updateNavBadges();
+  await saveData();toast('Parcela marcada como paga!','ok');
+}
+
+async function desfazerPago(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  if(!confirm(`Desfazer baixa de "${a.reclamada}" — Parcela ${a.parcela}?`))return;
+  a.situacao='PENDENTE';renderPage();updateNavBadges();
+  await saveData();toast('Baixa desfeita — parcela voltou para pendente.','info');
+}
+
+function abrirEditar(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  const mb=document.getElementById('edit-modal-body');
+  const mf=document.getElementById('edit-modal-footer');
+  mb.innerHTML=`
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Reclamante</div><input id="e-reclamante" class="form-input" value="${a.reclamante||''}"/></div>
+      <div class="form-group"><div class="form-label">Reclamada</div><input id="e-reclamada" class="form-input" value="${a.reclamada||''}"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Tipo da verba</div>
+        <select id="e-tipo" class="form-input">${TIPOS_VERBAS.map(t=>`<option value="${t}" ${a.tipo===t?'selected':''}>${t}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><div class="form-label">Parcela</div><input id="e-parcela" class="form-input" value="${a.parcela||''}"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Data fatal *</div><input id="e-fatal" class="form-input" type="date" value="${a.fatal||''}"/></div>
+      <div class="form-group"><div class="form-label">Valor (R$)</div><input id="e-valor" class="form-input" type="number" step="0.01" value="${a.valor||0}"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Advogado / Responsável</div><input id="e-adv" class="form-input" value="${a.advogado||''}"/></div>
+      <div class="form-group"><div class="form-label">% Multa</div><input id="e-multa" class="form-input" type="number" value="${a.multa||50}"/></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><div class="form-label">Dados bancários / PIX</div>
+      <textarea id="e-banco" class="form-input">${a.banco||''}</textarea></div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Status</div>
+        <select id="e-situacao" class="form-input">
+          <option value="PENDENTE" ${a.situacao==='PENDENTE'?'selected':''}>Pendente</option>
+          <option value="PAGO" ${a.situacao==='PAGO'?'selected':''}>Pago</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Processo</div><input id="e-processo" class="form-input" value="${a.processo||''}"/></div>
+    </div>`;
+  mf.innerHTML=`
+    <button class="btn" onclick="closeModal('edit-modal')">Cancelar</button>
+    <button class="btn warning" onclick="desfazerPago(${id});closeModal('edit-modal')">↩ Desfazer baixa</button>
+    <button class="btn primary" onclick="salvarEdicao(${id})">💾 Salvar alterações</button>`;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+async function salvarEdicao(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  const g=eid=>(document.getElementById(eid)||{}).value||'';
+  a.reclamante=g('e-reclamante')||a.reclamante;
+  a.reclamada=g('e-reclamada')||a.reclamada;
+  a.tipo=g('e-tipo')||a.tipo;
+  a.parcela=g('e-parcela')||a.parcela;
+  a.fatal=g('e-fatal')||a.fatal;
+  a.valor=parseFloat(g('e-valor'))||a.valor;
+  a.advogado=g('e-adv');
+  a.multa=parseFloat(g('e-multa'))||a.multa;
+  a.banco=g('e-banco');
+  a.situacao=g('e-situacao')||a.situacao;
+  a.processo=g('e-processo');
+  closeModal('edit-modal');
+  renderPage();updateNavBadges();
+  await saveData();toast('Parcela atualizada!','ok');
+}
+
+async function salvarNovo(){
+  const g=id=>(document.getElementById(id)||{}).value||'';
+  if(!g('n-reclamante')||!g('n-reclamada')||!g('n-fatal')||!g('n-parcela')){toast('Preencha os campos obrigatórios (*)','err');return;}
+  const novo={
+    id:Date.now(),
+    reclamante:g('n-reclamante'),reclamada:g('n-reclamada'),
+    processo:g('n-processo'),tipo:g('n-tipo'),parcela:g('n-parcela'),
+    fatal:g('n-fatal'),valor:parseFloat(g('n-valor'))||0,
+    multa:parseFloat(g('n-multa'))||50,banco:g('n-banco'),advogado:g('n-adv'),
+    linkAta:g('n-link'),situacao:'PENDENTE',emailsEnviados:[],
+    // Valores detalhados
+    valoresDetalhados:{
+      acordo:parseFloat(g('n-vl-acordo'))||0,
+      honorarios:parseFloat(g('n-vl-honorarios'))||0,
+      fgts:parseFloat(g('n-vl-fgts'))||0,
+      verbas:parseFloat(g('n-vl-verbas'))||0,
+      custas:parseFloat(g('n-vl-custas'))||0,
+      inss:parseFloat(g('n-vl-inss'))||0
+    }
+  };
+  acordos.push(novo);
+  await saveData();toast('Acordo salvo!','ok');showPage('acordos');
+}
+
+async function salvarConfig(){
+  config.nomeEscritorio=document.getElementById('cfg-nome')?.value||config.nomeEscritorio;
+  config.setor=document.getElementById('cfg-setor')?.value||config.setor;
+  await saveData();toast('Configurações salvas!','ok');
+}
+
+async function uploadComprovante(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  const input=document.createElement('input');
+  input.type='file';input.accept='image/*,application/pdf';
+  input.onchange=async function(){
+    const file=input.files[0];if(!file)return;
+    showLoading('Enviando comprovante para o Drive...');
+    try{
+      const d=await driveUploadFile(file);
+      if(!a.comprovantes)a.comprovantes=[];
+      a.comprovantes.push({fileId:d.id,nome:file.name,data:new Date().toISOString().slice(0,10)});
+      if(a.situacao!=='PAGO'){a.situacao='PAGO';updateNavBadges();}
+      await saveData();hideLoading();
+      toast('Comprovante salvo no Drive! Parcela marcada como paga.','ok');renderPage();
+    }catch(e){hideLoading();toast('Erro ao enviar: '+e.message,'err');}
+  };
+  input.click();
+}
+
+function verComprovantes(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  const comps=a.comprovantes||[];
+  if(comps.length===0){toast('Nenhum comprovante anexado.','info');return;}
+  comps.forEach(c=>window.open(`https://drive.google.com/file/d/${c.fileId}/view`,'_blank'));
+}
+
+function abrirModalEmailAuto(id){
+  const a=acordos.find(x=>x.id===id);if(!a)return;
+  const d=daysDiff(a.fatal);
+  abrirModalEmail(id,d>=5?'e1':d>=3?'e2':'e3');
+}
+
+function abrirModalEmail(id,tipo){
+  emailModalAcordo=acordos.find(x=>x.id===id);
+  emailModalTipo=tipo;renderModal();
+  document.getElementById('email-modal').classList.add('open');
+}
+
+function gerarEmailTexto(tipo,a){
+  const dt=fmtDate(a.fatal),esc=config.nomeEscritorio,set=config.setor;
+  const t={
+    e1:{assunto:`ACOMPANHAMENTO DE ${a.tipo||'ACORDO'} TRABALHISTA – PROCESSO Nº ${a.processo||'s/n'} – ${a.reclamada} – PARCELA Nº ${a.parcela}`,
+      corpo:`À: ${a.reclamada}\nA/C: Departamento Jurídico / Financeiro\n\nREFERÊNCIA: Processo Judicial nº ${a.processo||'s/n'}, envolvendo ${a.reclamante} e ${a.reclamada}.\n\nPrezados Senhores,\n\nReportamo-nos ao acordo trabalhista homologado nos autos do processo em epígrafe, para informar acerca da obrigação com vencimento previsto para o dia ${dt}, referente à parcela nº ${a.parcela} — ${a.tipo||'ACORDO'}.\n\nPara a devida quitação, solicitamos que o depósito seja efetuado nos seguintes dados bancários:\n\n${a.banco||'(dados bancários conforme acordo)'}\n\nOutrossim, cumpre-nos salientar que o descumprimento da obrigação no prazo estabelecido acarretará a incidência da cláusula penal pactuada no acordo homologado judicialmente, a qual prevê multa de ${a.multa||50}% sobre o valor devido (${fmtBRL(a.valor)}), conforme expressamente determinado na decisão judicial.\n\nDesta forma, solicitamos a máxima atenção e a programação do cumprimento da obrigação no prazo assinalado.\n\nPermaneceimos à disposição para quaisquer esclarecimentos.\n\nAtenciosamente,\n${a.advogado||''}\n${set}\n${esc}`},
+    e2:{assunto:`REFORÇO DE ACOMPANHAMENTO – ${a.tipo||'ACORDO'} TRABALHISTA – VENCIMENTO EM ${dt} – PROCESSO Nº ${a.processo||'s/n'}`,
+      corpo:`À: ${a.reclamada}\nA/C: Departamento Jurídico / Financeiro\n\nREFERÊNCIA: Processo Judicial nº ${a.processo||'s/n'}, envolvendo ${a.reclamante} e ${a.reclamada}.\n\nPrezados Senhores,\n\nReiteramos o acompanhamento referente ao acordo trabalhista homologado nos autos do processo em epígrafe.\n\nA obrigação pactuada, concernente ao pagamento da parcela nº ${a.parcela} — ${a.tipo||'ACORDO'} — no valor de ${fmtBRL(a.valor)}, possui vencimento assinalado para o dia ${dt}.\n\nEm face da proximidade do termo final, solicitamos especial atenção à regularização da obrigação, a fim de evitar a incidência da cláusula penal de ${a.multa||50}% sobre o valor devido.\n\nPedimos a gentileza de confirmar o recebimento e informar a programação para o adimplemento.\n\nPermaneceimos à disposição.\n\nAtenciosamente,\n${a.advogado||''}\n${set}\n${esc}`},
+    e3:{assunto:`URGENTE – NOTIFICAÇÃO FINAL – ${a.tipo||'ACORDO'} TRABALHISTA – PROCESSO Nº ${a.processo||'s/n'} – PRAZO FATAL: ${dt}`,
+      corpo:`À: ${a.reclamada}\nA/C: Departamento Jurídico / Financeiro\n\nREFERÊNCIA: Processo Judicial nº ${a.processo||'s/n'}, envolvendo ${a.reclamante} e ${a.reclamada}.\n\nPrezados Senhores,\n\nPor meio da presente, em caráter de NOTIFICAÇÃO FINAL, reportamo-nos ao processo judicial em epígrafe para reiterar a exigibilidade da obrigação pactuada em acordo trabalhista homologado, cujo vencimento final está peremptoriamente fixado para o dia ${dt}.\n\nCumpre-nos informar que, até a presente data, não consta o adimplemento da obrigação referente ao pagamento da parcela nº ${a.parcela} — ${a.tipo||'ACORDO'} — no valor de ${fmtBRL(a.valor)}.\n\nO não cumprimento até a data limite implicará na imediata incidência da cláusula penal de ${a.multa||50}%, e ensejará a adoção das medidas judiciais cabíveis para a execução forçada do título executivo judicial.\n\nRequeremos, com a máxima urgência, o imediato cumprimento e o envio do respectivo comprovante de pagamento.\n\nNa ausência de manifestação até a data supramencionada, procederemos com as medidas judiciais pertinentes.\n\nAtenciosamente,\n${a.advogado||''}\n${set}\n${esc}`}
+  };
+  return t[tipo]||t.e1;
+}
+
+function renderModal(){
+  const a=emailModalAcordo,tipo=emailModalTipo;if(!a)return;
+  const email=gerarEmailTexto(tipo,a);
+  const titulos={e1:'1º E-mail — Aviso (−5 dias)',e2:'2º E-mail — Reforço (−3 dias)',e3:'3º E-mail — Notificação final'};
+  document.getElementById('modal-title').textContent=titulos[tipo];
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:1rem">
+      <button class="tab-btn ${tipo==='e1'?'active':''}" onclick="emailModalTipo='e1';renderModal()">① 1º E-mail</button>
+      <button class="tab-btn ${tipo==='e2'?'active':''}" onclick="emailModalTipo='e2';renderModal()">② 2º E-mail</button>
+      <button class="tab-btn ${tipo==='e3'?'active':''}" onclick="emailModalTipo='e3';renderModal()">③ 3º E-mail</button>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:.75rem 1rem;margin-bottom:1rem;font-size:12px">
+      <strong>${a.reclamada}</strong> · ${tipoBadge(a.tipo||'ACORDO')} · ${a.reclamante} · Parcela ${a.parcela} · ${fmtDate(a.fatal)} · ${fmtBRL(a.valor)}
+    </div>
+    <div class="form-group" style="margin-bottom:.875rem"><div class="form-label">Destinatário</div>
+      <input id="modal-dest" class="form-input" type="email" placeholder="financeiro@empresa.com.br"/></div>
+    <div class="form-group" style="margin-bottom:.875rem"><div class="form-label">Assunto</div>
+      <input id="modal-assunto" class="form-input" value="${email.assunto.replace(/"/g,'&quot;')}"/></div>
+    <div class="form-group"><div class="form-label">Corpo do e-mail</div>
+      <textarea id="modal-corpo" class="form-input" rows="12">${email.corpo}</textarea></div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn" onclick="copiarEmail()">📋 Copiar</button>
+    <button class="btn" onclick="marcarEmailEnviado()">✓ Marcar enviado</button>
+    <button class="btn" onclick="uploadComprovante(${a.id})">📎 Comprovante</button>
+    <button class="btn gmail" onclick="criarRascunhoGmail()">✉ Criar rascunho Gmail</button>`;
+}
+
+function copiarEmail(){
+  const ass=document.getElementById('modal-assunto')?.value||'';
+  const corpo=document.getElementById('modal-corpo')?.value||'';
+  navigator.clipboard.writeText(`Assunto: ${ass}\n\n${corpo}`).then(()=>toast('Copiado!','ok'));
+}
+
+async function marcarEmailEnviado(){
+  const a=emailModalAcordo;if(!a)return;
+  if(!a.emailsEnviados)a.emailsEnviados=[];
+  if(!a.emailsEnviados.includes(emailModalTipo))a.emailsEnviados.push(emailModalTipo);
+  await saveData();toast('Registro salvo!','ok');closeModal('email-modal');renderPage();
+}
+
+async function criarRascunhoGmail(){
+  const a=emailModalAcordo;
+  const dest=document.getElementById('modal-dest')?.value||'';
+  const assunto=document.getElementById('modal-assunto')?.value||'';
+  const corpo=document.getElementById('modal-corpo')?.value||'';
+  showLoading('Criando rascunho no Gmail...');
+  try{
+    await gmailCreateDraft(dest,assunto,corpo);
+    if(!a.emailsEnviados)a.emailsEnviados=[];
+    if(!a.emailsEnviados.includes(emailModalTipo))a.emailsEnviados.push(emailModalTipo);
+    await saveData();hideLoading();
+    toast('Rascunho criado no Gmail! Abra o Gmail para revisar e enviar.','info');
+    closeModal('email-modal');renderPage();
+  }catch(e){hideLoading();toast('Erro: '+e.message,'err');}
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('hoje-label').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+if(verificarToken()){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='';
+  getUserEmail();loadData();
+}else{
+  document.getElementById('login-screen').style.display='flex';
+}
+</script>
+</body>
+</html>
